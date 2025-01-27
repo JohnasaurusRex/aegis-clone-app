@@ -51,19 +51,35 @@ export const analyzeToken = async (address: string): Promise<AnalysisResponse> =
       headers: {
         'Content-Type': 'application/json',
       },
-      credentials: 'include',
       body: JSON.stringify({ address }),
     });
 
-    const data = await response.json();
-    
     if (!response.ok) {
-      throw new Error(data.error || 'Analysis failed');
+      throw new Error('Analysis failed');
     }
 
-    return data;
+    return await response.json();
   } catch (error) {
     console.error('Error analyzing token:', error);
+    throw error;
+  }
+};
+
+export const pollAnalysisStatus = async (requestId: string): Promise<AnalysisResponse> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/status/${requestId}`, {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch analysis status');
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Error polling analysis status:', error);
     throw error;
   }
 };
