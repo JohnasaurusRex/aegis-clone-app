@@ -240,36 +240,35 @@ const AnalysisView: React.FC<AnalysisViewProps> = ({ data }) => {
       {/* Right Column - Graph */}
       <div className="bg-slate-800/30 rounded-xl p-6 mb-10">
         <div className="h-[600px] w-full">
-        {graphUrl ? (
-          <div className="relative w-full h-full">
-            {graphError ? (
-              <div className="h-full w-full flex items-center justify-center flex-col gap-4">
-                <p className="text-slate-400">Unable to load graph</p>
-                <button 
-                  onClick={() => setGraphError(false)}
-                  className="text-blue-400 hover:text-blue-300 transition-colors"
-                >
-                  Try Again
-                </button>
-              </div>
-            ) : (
-              <iframe
-                src={graphUrl}
-                className="w-full h-full rounded-lg"
-                frameBorder="0"
-                loading="lazy"
-                title="Token Price Chart"
-                allowFullScreen
-                sandbox="allow-same-origin allow-scripts"
-                onError={() => setGraphError(true)}
-              />
-            )}
-          </div>
-        ) : (
-          <div className="h-full w-full flex items-center justify-center">
-            <LoadingShimmer className="h-full w-full" />
-          </div>
-        )}
+          {token_data?.token_address ? (
+            <div className="relative w-full h-full">
+              {graphError ? (
+                <div className="h-full w-full flex items-center justify-center flex-col gap-4">
+                  <p className="text-slate-400">Unable to load graph</p>
+                  <button 
+                    onClick={() => setGraphError(false)}
+                    className="text-blue-400 hover:text-blue-300 transition-colors"
+                  >
+                    Try Again
+                  </button>
+                </div>
+              ) : (
+                <iframe
+                  src={`https://www.gmgn.cc/kline/sol/${token_data.token_address}`}
+                  className="w-full h-full rounded-lg"
+                  frameBorder="0"
+                  loading="lazy"
+                  title="Token Price Chart"
+                  allowFullScreen
+                  onError={() => setGraphError(true)}
+                />
+              )}
+            </div>
+          ) : (
+            <div className="h-full w-full flex items-center justify-center">
+              <LoadingShimmer className="h-full w-full" />
+            </div>
+          )}
         </div>
       </div>
     </div>
