@@ -258,7 +258,12 @@ const AnalysisView: React.FC<AnalysisViewProps> = ({ data }) => {
                   loading="lazy"
                   title="Token Price Chart"
                   allowFullScreen
-                  onError={() => setGraphError(true)}
+                  sandbox="allow-scripts allow-same-origin"
+                  // Add these security attributes
+                  referrerPolicy="no-referrer"
+                  data-gramm="false"  // Prevent Grammarly
+                  data-gramm_editor="false"
+                  data-enable-grammarly="false"
                 />
               )}
             </div>
