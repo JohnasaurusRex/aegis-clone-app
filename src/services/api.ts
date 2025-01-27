@@ -51,6 +51,7 @@ export const analyzeToken = async (address: string): Promise<AnalysisResponse> =
       headers: {
         'Content-Type': 'application/json',
       },
+      credentials: 'include',
       body: JSON.stringify({ address }),
     });
 
