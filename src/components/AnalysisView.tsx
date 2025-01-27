@@ -12,7 +12,7 @@ interface AnalysisViewProps {
 
 const AnalysisView: React.FC<AnalysisViewProps> = ({ data }) => {
   const [showFullSummary, setShowFullSummary] = useState(false);
-  // const [graphError, setGraphError] = useState(false);
+  const [graphError, setGraphError] = useState(false);
   const { token_data } = data;
 
   // Check if additional data is still loading
@@ -237,7 +237,7 @@ const AnalysisView: React.FC<AnalysisViewProps> = ({ data }) => {
       </div>
 
       {/* Right Column - Graph */}
-      {/* <div className="bg-slate-800/30 rounded-xl p-6 mb-10">
+      <div className="bg-slate-800/30 rounded-xl p-6 mb-10">
         <div className="h-[600px] w-full">
           {token_data?.token_address ? (
             <div className="relative w-full h-full">
@@ -274,7 +274,7 @@ const AnalysisView: React.FC<AnalysisViewProps> = ({ data }) => {
             </div>
           )}
         </div>
-      </div> */}
+      </div>
     </div>
   );
 };
