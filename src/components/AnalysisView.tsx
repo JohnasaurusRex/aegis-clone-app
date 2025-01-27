@@ -1,6 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { TrendingUp, DollarSign, BarChart2, LineChart } from 'lucide-react';
 import { AnalysisResponse } from '../services/api';
+
+// LoadingShimmer Component
+const LoadingShimmer = ({ className }: { className: string }) => (
+  <div className={`animate-pulse bg-slate-700/50 rounded ${className}`} />
+);
 
 interface AnalysisViewProps {
   data: AnalysisResponse;
@@ -8,9 +13,11 @@ interface AnalysisViewProps {
 
 const AnalysisView: React.FC<AnalysisViewProps> = ({ data }) => {
   const [showFullSummary, setShowFullSummary] = useState(false);
-  const {
-    token_data
-  } = data;
+  const [graphError, setGraphError] = useState(false);
+  const { token_data } = data;
+
+  // Check if additional data is still loading
+  const isLoading = !data.market_analysis || !data.social_analysis || !data.social_scores;
 
   // Format large numbers
   const formatNumber = (num: number) => {
@@ -20,43 +27,82 @@ const AnalysisView: React.FC<AnalysisViewProps> = ({ data }) => {
     return `$${num.toFixed(2)}`;
   };
 
-  const renderContent = () => (
+  // Get color based on score
+  const getScoreColor = (score: number) => {
+    if (score >= 70) return 'text-green-400';
+    if (score >= 50) return 'text-yellow-400';
+    return 'text-red-400';
+  };
+
+  // Render scores with loading state
+  const renderScore = (score: number | undefined, label: string) => (
+    <div className="text-center">
+      {score !== undefined ? (
+        <p className={`${getScoreColor(score)} text-2xl font-bold`}>
+          {score}/100
+        </p>
+      ) : (
+        <LoadingShimmer className="h-8 w-24 mx-auto" />
+      )}
+      <p className="text-slate-400 text-sm mt-2">{label}</p>
+    </div>
+  );
+
+  // Process graph URL
+  const graphUrl = token_data.graph_url 
+    ? `/api/graph-proxy?url=${encodeURIComponent(token_data.graph_url)}`
+    : null;
+
+  // Reset graph error when URL changes
+  useEffect(() => {
+    setGraphError(false);
+  }, [token_data.graph_url]);
+
+  return (
     <div className="w-full max-w-7xl mx-auto px-4 mt-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
       {/* Left Column */}
       <div className="bg-slate-800/30 rounded-xl p-6 mb-10">
+        {/* Token Info Header */}
         <div className="flex items-center gap-3 mb-6">
           <div>
             <div className="flex items-center gap-2">
               <h2 className="text-2xl text-white font-bold">{token_data.token_symbol}</h2>
-              <span className="text-slate-400 text-sm">/{token_data.quote_token_symbol}</span>
+              <span className="text-slate-400 text-sm">/SOL</span>
             </div>
             <span className="text-slate-400 text-sm">{token_data.token_address}</span>
             <p className="text-slate-400 text-sm">{token_data.token_name}</p>
           </div>
           <div className="ml-auto text-right">
-            <p className="text-green-400 text-4xl font-bold">{data.market_scores?.trust_score}</p>
+            <p className={`${getScoreColor(data.market_scores?.trust_score || 0)} text-4xl font-bold`}>
+              {data.market_scores?.trust_score || <LoadingShimmer className="h-12 w-16" />}
+            </p>
             <p className="text-slate-400 text-sm">Trust Score</p>
           </div>
         </div>
 
+        {/* Market Metrics */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
           <div className="p-4 bg-slate-800/80 rounded-lg">
             <div className="flex items-center gap-2 text-slate-400 text-sm mb-2">
               <DollarSign size={16} />
               <p>Market Cap</p>
             </div>
-              <p className="text-white text-xl font-bold">{formatNumber(token_data.market_cap)}</p>
-              <p className="text-slate-400 text-sm">Score: {data.market_scores?.market_cap_score}/100</p>
-            </div>
+            <p className="text-white text-xl font-bold">{formatNumber(token_data.market_cap)}</p>
+            <p className={`text-sm ${getScoreColor(data.market_scores?.market_cap_score || 0)}`}>
+              Score: {data.market_scores?.market_cap_score || '...'}/100
+            </p>
+          </div>
           <div className="p-4 bg-slate-800/80 rounded-lg">
             <div className="flex items-center gap-2 text-slate-400 text-sm mb-2">
               <TrendingUp size={16} />
               <p>Price Trend</p>
             </div>
             <p className={`text-xl font-bold ${token_data.price_change_24h >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-              {token_data.price_change_24h >= 0 ? 'Up' : 'Down'}
+              {token_data.price_change_24h >= 0 ? '↑ Up' : '↓ Down'}
             </p>
-            <p className="text-slate-400 text-sm">{token_data.price_change_24h}%</p>
+            <p className={token_data.price_change_24h >= 0 ? 'text-green-400' : 'text-red-400'}>
+              {Math.abs(token_data.price_change_24h).toFixed(2)}%
+            </p>
           </div>
           <div className="p-4 bg-slate-800/80 rounded-lg">
             <div className="flex items-center gap-2 text-slate-400 text-sm mb-2">
@@ -64,7 +110,9 @@ const AnalysisView: React.FC<AnalysisViewProps> = ({ data }) => {
               <p>Liquidity</p>
             </div>
             <p className="text-white text-xl font-bold">{formatNumber(token_data.liquidity)}</p>
-            <p className="text-slate-400 text-sm">Score: {data.market_scores?.liquidity_score}/100</p>
+            <p className={`text-sm ${getScoreColor(data.market_scores?.liquidity_score || 0)}`}>
+              Score: {data.market_scores?.liquidity_score || '...'}/100
+            </p>
           </div>
           <div className="p-4 bg-slate-800/80 rounded-lg">
             <div className="flex items-center gap-2 text-slate-400 text-sm mb-2">
@@ -72,25 +120,38 @@ const AnalysisView: React.FC<AnalysisViewProps> = ({ data }) => {
               <p>24h Volume</p>
             </div>
             <p className="text-white text-xl font-bold">{formatNumber(token_data.volume_24h)}</p>
-            <p className="text-slate-400 text-sm">Score: {data.market_scores?.volume_score}/100</p>
-          </div>
-        </div>
-
-        <div className="mb-8">
-          <h3 className="text-white text-xl font-bold mb-4">Analysis Summary</h3>
-          <div className="text-slate-300 leading-relaxed">
-            <p>
-              {showFullSummary ? data.market_analysis : `${data.market_analysis?.slice(0, 300)}...`}
+            <p className={`text-sm ${getScoreColor(data.market_scores?.volume_score || 0)}`}>
+              Score: {data.market_scores?.volume_score || '...'}/100
             </p>
           </div>
-          <button 
-            onClick={() => setShowFullSummary(!showFullSummary)}
-            className="text-blue-400 mt-4 hover:text-blue-300"
-          >
-            {showFullSummary ? 'Show Less' : 'Read More'}
-          </button>
         </div>
 
+        {/* Analysis Summary */}
+        <div className="mb-8">
+          <h3 className="text-white text-xl font-bold mb-4">Analysis Summary</h3>
+          {isLoading ? (
+            <div className="space-y-2">
+              <LoadingShimmer className="h-4 w-full" />
+              <LoadingShimmer className="h-4 w-11/12" />
+              <LoadingShimmer className="h-4 w-10/12" />
+              <LoadingShimmer className="h-4 w-9/12" />
+            </div>
+          ) : (
+            <>
+              <div className="text-slate-300 leading-relaxed">
+                <p>{showFullSummary ? data.market_analysis : `${data.market_analysis?.slice(0, 300)}...`}</p>
+              </div>
+              <button 
+                onClick={() => setShowFullSummary(!showFullSummary)}
+                className="text-blue-400 mt-4 hover:text-blue-300 transition-colors"
+              >
+                {showFullSummary ? 'Show Less' : 'Read More'}
+              </button>
+            </>
+          )}
+        </div>
+
+        {/* Market Assessment */}
         <div className="mb-8">
           <h3 className="text-white text-xl font-bold mb-4">Market Assessment</h3>
           <div className="p-4 bg-slate-900/80 rounded-lg space-y-4">
@@ -120,39 +181,49 @@ const AnalysisView: React.FC<AnalysisViewProps> = ({ data }) => {
               </span>
             </div>
           </div>
-          <p className="text-slate-300 mt-4 text-sm">
-            With total liquidity of approximately {formatNumber(token_data.liquidity)}, ${token_data.token_symbol} is classified as 
-            {token_data.liquidity > 1000000 ? ' low' : ' high'} risk, allowing for 
-            regular trading activities{token_data.liquidity > 1000000 ? ' without significant' : ' with potential'} issues related to slippage or liquidity depth.
-          </p>
+          <div className="mt-4">
+            {isLoading ? (
+              <LoadingShimmer className="h-16 w-full" />
+            ) : (
+              <p className="text-slate-300 text-sm">
+                With total liquidity of approximately {formatNumber(token_data.liquidity)}, ${token_data.token_symbol} is classified as 
+                {token_data.liquidity > 1000000 ? ' low' : ' high'} risk, allowing for 
+                regular trading activities{token_data.liquidity > 1000000 ? ' without significant' : ' with potential'} issues related to slippage or liquidity depth.
+              </p>
+            )}
+          </div>
         </div>
 
+        {/* Social Metrics */}
         <div>
           <h3 className="text-white text-xl font-bold mb-4">Social Metrics</h3>
           <div className="p-4 bg-slate-900/80 rounded-lg space-y-4">
             <div className="grid grid-cols-3 gap-4 mb-4">
-              <div className="text-center">
-                <p className="text-yellow-400 text-2xl font-bold">
-                  {data.social_scores?.sentiment_score}/100
-                </p>
-                <p className="text-slate-400 text-sm">Sentiment Score</p>
-              </div>
-              <div className="text-center">
-                <p className="text-green-400 text-2xl font-bold">
-                  {data.social_scores?.community_trust_score}%
-                </p>
-                <p className="text-slate-400 text-sm">Community Trust</p>
-              </div>
-              <div className="text-center">
-                <p className="text-green-400 text-2xl font-bold">
-                  {data.social_scores?.trending_score}/100
-                </p>
-                <p className="text-slate-400 text-sm">Trending Score</p>
-              </div>
+              {isLoading ? (
+                <>
+                  <LoadingShimmer className="h-20" />
+                  <LoadingShimmer className="h-20" />
+                  <LoadingShimmer className="h-20" />
+                </>
+              ) : (
+                <>
+                  {renderScore(data.social_scores?.sentiment_score, "Sentiment Score")}
+                  {renderScore(data.social_scores?.community_trust_score, "Community Trust")}
+                  {renderScore(data.social_scores?.trending_score, "Trending Score")}
+                </>
+              )}
             </div>
-            <p className="text-slate-300 text-sm leading-relaxed">
-              {data.social_analysis}
-            </p>
+            {isLoading ? (
+              <div className="space-y-2">
+                <LoadingShimmer className="h-4 w-full" />
+                <LoadingShimmer className="h-4 w-11/12" />
+                <LoadingShimmer className="h-4 w-10/12" />
+              </div>
+            ) : (
+              <p className="text-slate-300 text-sm leading-relaxed">
+                {data.social_analysis}
+              </p>
+            )}
           </div>
         </div>
       </div>
@@ -160,29 +231,40 @@ const AnalysisView: React.FC<AnalysisViewProps> = ({ data }) => {
       {/* Right Column - Graph */}
       <div className="bg-slate-800/30 rounded-xl p-6 mb-10">
         <div className="h-[600px] w-full">
-          {token_data.graph_url ? (
-            <iframe
-              src={token_data.graph_url}
-              className="w-full h-full rounded-lg"
-              frameBorder="0"
-              loading="lazy"
-              title="Token Price Chart"
-              allowFullScreen
-            />
+          {graphUrl ? (
+            <div className="relative w-full h-full">
+              {graphError ? (
+                <div className="h-full w-full flex items-center justify-center flex-col gap-4">
+                  <p className="text-slate-400">Unable to load graph</p>
+                  <button 
+                    onClick={() => setGraphError(false)}
+                    className="text-blue-400 hover:text-blue-300 transition-colors"
+                  >
+                    Try Again
+                  </button>
+                </div>
+              ) : (
+                <iframe
+                  src={graphUrl}
+                  className="w-full h-full rounded-lg"
+                  frameBorder="0"
+                  loading="lazy"
+                  title="Token Price Chart"
+                  allowFullScreen
+                  sandbox="allow-same-origin allow-scripts"
+                  referrerPolicy="no-referrer"
+                  onError={() => setGraphError(true)}
+                />
+              )}
+            </div>
           ) : (
             <div className="h-full w-full flex items-center justify-center">
-              <p className="text-slate-400">Graph Loading...</p>
+              <LoadingShimmer className="h-full w-full" />
             </div>
           )}
         </div>
       </div>
     </div>
-  );
-
-  return (
-    <>
-      {renderContent()}
-    </>
   );
 };
 
