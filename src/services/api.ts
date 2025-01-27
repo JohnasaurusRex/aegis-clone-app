@@ -54,11 +54,13 @@ export const analyzeToken = async (address: string): Promise<AnalysisResponse> =
       body: JSON.stringify({ address }),
     });
 
+    const data = await response.json();
+
     if (!response.ok) {
-      throw new Error('Analysis failed');
+      throw new Error(data.error || 'Analysis failed');
     }
 
-    return await response.json();
+    return data;
   } catch (error) {
     console.error('Error analyzing token:', error);
     throw error;
@@ -73,11 +75,13 @@ export const pollAnalysisStatus = async (requestId: string): Promise<AnalysisRes
       },
     });
 
+    const data = await response.json();
+
     if (!response.ok) {
-      throw new Error('Failed to fetch analysis status');
+      throw new Error(data.error || 'Failed to fetch analysis status');
     }
 
-    return await response.json();
+    return data;
   } catch (error) {
     console.error('Error polling analysis status:', error);
     throw error;
