@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { TrendingUp, DollarSign, BarChart2, LineChart } from 'lucide-react';
-import { AnalysisResponse, API_BASE_URL } from '../services/api';
+import { AnalysisResponse } from '../services/api';
 
 const LoadingShimmer = ({ className }: { className: string }) => (
   <div className={`animate-pulse bg-slate-700/50 rounded ${className}`} />
@@ -39,8 +39,6 @@ const AnalysisView: React.FC<AnalysisViewProps> = ({ data }) => {
   const safeValue = (value: any, defaultValue: any = 0) => {
     return value === undefined || value === null ? defaultValue : value;
   };
-
-  const graphUrl = token_data?.graph_url ? `${API_BASE_URL}/proxy-graph?url=${encodeURIComponent(token_data.graph_url)}` : null;
 
   return (
     <div className="w-full max-w-7xl mx-auto px-4 mt-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
