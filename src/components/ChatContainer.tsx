@@ -1,8 +1,8 @@
-// ChatContainer.tsx
 import { useState, useRef, memo, useCallback } from 'react';
 import { Send } from 'lucide-react';
 import { sendChatMessage } from '../services/api';
 import ReactMarkdown from 'react-markdown';
+import RotatingQuestions from './RotatingQuestions';
 
 interface Message {
   text: string;
@@ -66,18 +66,17 @@ const ChatContainer = ({ tokenAddress, requestId, messages, setMessages }: ChatC
   const [inputMessage, setInputMessage] = useState('');
   const chatContainerRef = useRef<HTMLDivElement>(null);
 
-  const handleSendMessage = useCallback(async () => {
-    if (!inputMessage.trim() || !tokenAddress || !requestId) return;
+  const handleSendMessage = useCallback(async (message: string) => {
+    if (!message.trim() || !tokenAddress || !requestId) return;
   
-    const newUserMessage: Message = { text: inputMessage, isUser: true };
+    const newUserMessage: Message = { text: message, isUser: true };
     setMessages(prevMessages => [...prevMessages, newUserMessage]);
     
-    const currentMessage = inputMessage;
     setInputMessage('');
 
     try {
       const response = await sendChatMessage(
-        currentMessage,
+        message,
         tokenAddress,
         requestId
       );
@@ -100,7 +99,12 @@ const ChatContainer = ({ tokenAddress, requestId, messages, setMessages }: ChatC
         }
       }, 100);
     }
-  }, [inputMessage, tokenAddress, requestId, setMessages]);
+  }, [tokenAddress, requestId, setMessages]);
+
+  const handleQuestionClick = useCallback((question: string) => {
+    setInputMessage(question);
+    handleSendMessage(question);
+  }, [handleSendMessage]);
 
   return (
     <div className="flex-1 border-t border-slate-700 flex flex-col">
@@ -109,6 +113,10 @@ const ChatContainer = ({ tokenAddress, requestId, messages, setMessages }: ChatC
         className="flex-1 overflow-y-auto p-4 space-y-4 scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-transparent"
         style={{ maxHeight: 'calc(80vh - 400px)', overflowY: 'auto' }}
       >
+        <RotatingQuestions 
+          onQuestionClick={handleQuestionClick}
+          disabled={!requestId || !tokenAddress}
+        />
         {messages.map((msg, idx) => (
           <ChatMessage 
             key={idx} 
@@ -125,7 +133,7 @@ const ChatContainer = ({ tokenAddress, requestId, messages, setMessages }: ChatC
             onKeyDown={(e) => {
               if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
-                handleSendMessage();
+                handleSendMessage(inputMessage);
               }
             }}
             type="text"
@@ -134,7 +142,7 @@ const ChatContainer = ({ tokenAddress, requestId, messages, setMessages }: ChatC
             disabled={!requestId || !tokenAddress}
           />
           <button 
-            onClick={handleSendMessage}
+            onClick={() => handleSendMessage(inputMessage)}
             className="p-2 text-slate-400 hover:text-white transition-colors rounded-lg hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed"
             disabled={!inputMessage.trim() || !requestId || !tokenAddress}
           >

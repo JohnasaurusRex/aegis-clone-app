@@ -227,20 +227,20 @@ const AnalysisView = ({ data }: AnalysisViewProps) => {
                 {formatNumber(safeValue(token_data?.market_cap))}
               </span>
             </div>
-          </div>
-          <div className="mt-4">
-            {isLoading ? (
-              <LoadingShimmer className="h-16 w-full" />
-            ) : (
-              <p className="text-slate-300 text-sm">
-                With total liquidity of approximately {formatNumber(safeValue(token_data?.liquidity))}, 
-                ${token_data?.token_symbol || 'the token'} is classified as 
-                {safeValue(token_data?.liquidity, 0) > 1000000 ? ' low' : ' high'} risk, allowing for 
-                regular trading activities
-                {safeValue(token_data?.liquidity, 0) > 1000000 ? ' without significant' : ' with potential'} 
-                issues related to slippage or liquidity depth.
-              </p>
-            )}
+              <div className="mt-4">
+              {isLoading ? (
+                <LoadingShimmer className="h-16 w-full" />
+              ) : (
+                <p className="text-slate-300 text-sm">
+                  With total liquidity of approximately {formatNumber(safeValue(token_data?.liquidity))}, 
+                  ${token_data?.token_symbol || 'the token'} is classified as 
+                  {safeValue(token_data?.liquidity, 0) > 1000000 ? ' low' : ' high'} risk, allowing for 
+                  regular trading activities
+                  {safeValue(token_data?.liquidity, 0) > 1000000 ? ' without significant ' : ' with potential '} 
+                  issues related to slippage or liquidity depth.
+                </p>
+              )}
+            </div>
           </div>
         </div>
 
