@@ -1,5 +1,25 @@
-export const API_BASE_URL = 'https://aegis-clone-api.vercel.app/api';
+// Configuration management for API endpoints
+export const ApiConfig = {
+  // Development configuration
+  development: {
+    BASE_URL: 'http://localhost:5000/api'
+  },
 
+  // Production configuration
+  production: {
+    BASE_URL: 'https://aegis-clone-api.vercel.app/api'
+  },
+
+  // Get current configuration (can be switched easily)
+  getConfig() {
+    // Toggle this or use environment variable
+    return this.development; // Change to this.production for deployment
+    // Or use environment variable:
+    // return process.env.NODE_ENV === 'production' ? this.production : this.development
+  }
+};
+
+// Existing interfaces remain the same
 export interface TokenData {
   token_name: string;
   token_symbol: string;
@@ -45,8 +65,10 @@ export interface AnalysisResponse {
 }
 
 export const analyzeToken = async (address: string): Promise<AnalysisResponse> => {
+  const config = ApiConfig.getConfig();
+
   try {
-    const response = await fetch(`${API_BASE_URL}/analyze`, {
+    const response = await fetch(`${config.BASE_URL}/analyze`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -67,9 +89,41 @@ export const analyzeToken = async (address: string): Promise<AnalysisResponse> =
   }
 };
 
-export const pollAnalysisStatus = async (requestId: string): Promise<AnalysisResponse> => {
+export const sendChatMessage = async (
+  message: string,
+  tokenAddress: string,
+  requestId: string
+): Promise<{ response: string; timestamp: number }> => {
   try {
-    const response = await fetch(`${API_BASE_URL}/status/${requestId}`, {
+    const config = ApiConfig.getConfig();
+    const response = await fetch(`${config.BASE_URL}/chat`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        message,
+        token_address: tokenAddress,
+        request_id: requestId
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to send message');
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Error sending message:', error);
+    throw error;
+  }
+};
+
+export const pollAnalysisStatus = async (requestId: string): Promise<AnalysisResponse> => {
+  const config = ApiConfig.getConfig();
+
+  try {
+    const response = await fetch(`${config.BASE_URL}/status/${requestId}`, {
       headers: {
         'Content-Type': 'application/json',
       },
