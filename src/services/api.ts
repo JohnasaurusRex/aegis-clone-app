@@ -13,7 +13,7 @@ export const ApiConfig = {
   // Get current configuration (can be switched easily)
   getConfig() {
     // Toggle this or use environment variable
-    return this.development; // Change to this.production for deployment
+    return this.production; // Change to this.production for deployment
     // Or use environment variable:
     // return process.env.NODE_ENV === 'production' ? this.production : this.development
   }
